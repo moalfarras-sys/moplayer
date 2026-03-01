@@ -57,6 +57,22 @@ supabase functions serve
 
 Open `apps/android-tv` in Android Studio, sync Gradle, then run `:app`.
 
+## Branding Assets
+
+Default branding assets are wired and ready:
+
+- Android TV app resources:
+  - `apps/android-tv/app/src/main/res/drawable-nodpi/moplayer_logo_primary.png`
+  - `apps/android-tv/app/src/main/res/drawable-nodpi/moplayer_login_bg.png`
+  - `apps/android-tv/app/src/main/res/drawable-nodpi/moplayer_tv_banner.png`
+  - `apps/android-tv/app/src/main/res/drawable-nodpi/moplayer_app_icon.png`
+- Admin web public assets:
+  - `apps/admin-web/public/branding/moplayer-logo-primary.png`
+  - `apps/admin-web/public/branding/moplayer-tv-banner.png`
+  - `apps/admin-web/public/branding/moplayer-app-icon.png`
+
+To replace with your final originals, keep the same filenames and overwrite files in place.
+
 ## CI workflows
 
 - `.github/workflows/android-ci.yml`

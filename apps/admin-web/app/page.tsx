@@ -1,5 +1,6 @@
 import { getSupabaseAdmin } from "@/lib/supabase";
 import QuickActions from "@/components/quick-actions";
+import Image from "next/image";
 import Link from "next/link";
 
 type KV = Record<string, unknown>;
@@ -36,8 +37,21 @@ export default async function HomePage() {
 
   return (
     <main>
-      <div className="h1">MoPlayer Control Center</div>
-      <p className="muted">Private Beta admin shell: Supabase-backed configuration and realtime observability.</p>
+      <div className="brandHero">
+        <Image
+          src="/branding/moplayer-logo-primary.png"
+          alt="MoPlayer"
+          width={96}
+          height={96}
+          style={{ borderRadius: 18 }}
+        />
+        <div>
+          <div className="h1">MoPlayer Control Center</div>
+          <p className="muted" style={{ marginTop: 0 }}>
+            Private Beta admin shell: Supabase-backed configuration and realtime observability.
+          </p>
+        </div>
+      </div>
       <p style={{ display: "flex", gap: 12 }}>
         <Link href="/servers">Servers</Link>
         <Link href="/flags">Feature Flags</Link>

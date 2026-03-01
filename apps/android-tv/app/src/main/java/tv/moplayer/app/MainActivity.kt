@@ -7,6 +7,7 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -32,7 +33,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.tv.material3.Button
 import androidx.room.Room
@@ -197,13 +200,40 @@ private fun MoPlayerRoot(onExit: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-                    .background(
-                        brush = Brush.verticalGradient(
+            .background(
+                brush = Brush.verticalGradient(
                     listOf(Color(0xFF0C1325), accentColor.copy(alpha = 0.22f), Color(0xFF0B111C))
                 )
             )
             .padding(TvUiContract.OverscanSafePaddingDp.dp)
     ) {
+        if (!loginDone) {
+            Image(
+                painter = painterResource(id = R.drawable.moplayer_login_bg),
+                contentDescription = "MoPlayer login background",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize(),
+                alpha = 0.42f
+            )
+            Image(
+                painter = painterResource(id = R.drawable.moplayer_logo_primary),
+                contentDescription = "MoPlayer logo",
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .padding(top = 28.dp)
+            )
+        } else if (selected == DockDestination.HOME) {
+            Image(
+                painter = painterResource(id = R.drawable.moplayer_tv_banner),
+                contentDescription = "MoPlayer home hero",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.TopCenter),
+                alpha = 0.16f
+            )
+        }
+
         Column(modifier = Modifier.fillMaxSize()) {
             AnimatedContent(targetState = selected, label = "dock-content") { destination ->
                 when (destination) {

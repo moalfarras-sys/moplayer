@@ -11,7 +11,10 @@
     <application
         android:name=".MoPlayerApplication"
         android:allowBackup="false"
+        android:banner="@drawable/moplayer_tv_banner"
+        android:icon="@drawable/moplayer_app_icon"
         android:label="MoPlayer"
+        android:roundIcon="@drawable/moplayer_app_icon"
         android:supportsRtl="true"
         android:theme="@android:style/Theme.DeviceDefault.NoActionBar">
 
