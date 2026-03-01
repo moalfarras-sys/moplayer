@@ -2,6 +2,7 @@ package tv.moplayer.data.repository
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.map
 import tv.moplayer.data.parser.M3uParser
 import tv.moplayer.data.service.ServerInputValidator
 import tv.moplayer.data.xtream.XtreamRemoteService
@@ -22,6 +23,10 @@ import java.io.File
 import java.net.HttpURLConnection
 import java.net.URI
 import java.net.URL
+import java.text.SimpleDateFormat
+import java.util.Locale
+import java.util.TimeZone
+import javax.xml.parsers.DocumentBuilderFactory
 
 class InMemoryPlaylistIngestor(
     private val parser: M3uParser = M3uParser(),
@@ -192,12 +197,92 @@ class BasicXtreamClient(
 }
 
 class BasicEpgProvider : EpgProvider {
-    override suspend fun sync(server: ServerProfile): Result<Unit> = Result.success(Unit)
+    private val programs = MutableStateFlow<Map<String, List<EpgProgram>>>(emptyMap())
+
+    override suspend fun sync(server: ServerProfile): Result<Unit> = runCatching {
+        val url = server.externalEpgUrl?.takeIf { it.isNotBlank() } ?: return@runCatching
+        val xml = readTextFromUrl(url)
+        programs.value = parseXmltv(xml)
+    }
+
     override fun currentAndNext(channelId: String): Flow<Pair<EpgProgram?, EpgProgram?>> {
-        val now = System.currentTimeMillis()
-        val current = EpgProgram(channelId, "Now Playing", now - 20 * 60_000, now + 40 * 60_000, "Current show")
-        val next = EpgProgram(channelId, "Up Next", now + 40 * 60_000, now + 100 * 60_000, "Next show")
-        return MutableStateFlow(current to next)
+        val normalized = normalizeChannel(channelId)
+        return programs.map { all ->
+            val now = System.currentTimeMillis()
+            val channelPrograms = all[normalized].orEmpty().sortedBy { it.startUtcMillis }
+            val current = channelPrograms.firstOrNull { now in it.startUtcMillis until it.endUtcMillis }
+            val next = channelPrograms.firstOrNull { it.startUtcMillis > now }
+            current to next
+        }
+    }
+
+    private fun parseXmltv(xml: String): Map<String, List<EpgProgram>> {
+        val builder = DocumentBuilderFactory.newInstance().newDocumentBuilder()
+        val doc = builder.parse(xml.byteInputStream())
+        val nodes = doc.getElementsByTagName("programme")
+        val out = mutableMapOf<String, MutableList<EpgProgram>>()
+        for (i in 0 until nodes.length) {
+            val node = nodes.item(i)
+            val attrs = node.attributes ?: continue
+            val channel = attrs.getNamedItem("channel")?.nodeValue ?: continue
+            val startRaw = attrs.getNamedItem("start")?.nodeValue ?: continue
+            val stopRaw = attrs.getNamedItem("stop")?.nodeValue ?: continue
+            val title = node.childNodes
+                .let { children ->
+                    (0 until children.length)
+                        .map { children.item(it) }
+                        .firstOrNull { it.nodeName.equals("title", ignoreCase = true) }
+                        ?.textContent
+                }?.trim().orEmpty()
+            val desc = node.childNodes
+                .let { children ->
+                    (0 until children.length)
+                        .map { children.item(it) }
+                        .firstOrNull { it.nodeName.equals("desc", ignoreCase = true) }
+                        ?.textContent
+                }?.trim()
+
+            val start = parseXmltvDate(startRaw) ?: continue
+            val stop = parseXmltvDate(stopRaw) ?: continue
+
+            val epg = EpgProgram(
+                channelId = channel,
+                title = if (title.isBlank()) "Program" else title,
+                startUtcMillis = start,
+                endUtcMillis = stop,
+                description = desc
+            )
+            out.getOrPut(normalizeChannel(channel)) { mutableListOf() }.add(epg)
+        }
+        return out
+    }
+
+    private fun parseXmltvDate(raw: String): Long? {
+        val cleaned = raw.trim().replace(Regex("\\s+"), " ")
+        val formats = listOf(
+            SimpleDateFormat("yyyyMMddHHmmss Z", Locale.US).apply { timeZone = TimeZone.getTimeZone("UTC") },
+            SimpleDateFormat("yyyyMMddHHmm Z", Locale.US).apply { timeZone = TimeZone.getTimeZone("UTC") },
+            SimpleDateFormat("yyyyMMddHHmmss", Locale.US).apply { timeZone = TimeZone.getTimeZone("UTC") },
+            SimpleDateFormat("yyyyMMddHHmm", Locale.US).apply { timeZone = TimeZone.getTimeZone("UTC") }
+        )
+        for (format in formats) {
+            val parsed = runCatching { format.parse(cleaned)?.time }.getOrNull()
+            if (parsed != null) return parsed
+        }
+        return null
+    }
+
+    private fun readTextFromUrl(url: String): String {
+        val conn = (URL(url).openConnection() as HttpURLConnection).apply {
+            requestMethod = "GET"
+            connectTimeout = 10_000
+            readTimeout = 20_000
+        }
+        return conn.inputStream.bufferedReader().use { it.readText() }
+    }
+
+    private fun normalizeChannel(channel: String): String {
+        return channel.trim().lowercase()
     }
 }
 
