@@ -1,0 +1,8 @@
+# Copy to local.properties and fill values
+sdk.dir=C\\:\\Android\\Sdk
+SUPABASE_URL=
+SUPABASE_ANON_KEY=
+WEATHER_API_BASE_URL=https://api.weatherapi.com/v1
+WEATHER_API_KEY=
+API_FOOTBALL_BASE_URL=https://v3.football.api-sports.io
+API_FOOTBALL_KEY=

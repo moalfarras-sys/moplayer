@@ -1,0 +1,49 @@
+name: Android CI
+
+on:
+  push:
+    paths:
+      - 'apps/android-tv/**'
+      - '.github/workflows/android-ci.yml'
+  pull_request:
+    paths:
+      - 'apps/android-tv/**'
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Gradle cache
+        uses: gradle/actions/setup-gradle@v4
+      - name: Assemble Debug
+        run: gradle -p apps/android-tv :app:assembleDebug
+      - name: Unit tests
+        run: gradle -p apps/android-tv test
+      - name: Lint
+        run: gradle -p apps/android-tv lint
+      - name: Optional static checks
+        run: |
+          TASKS="$(gradle -p apps/android-tv tasks --all)"
+          if echo "$TASKS" | grep -q "detekt"; then
+            gradle -p apps/android-tv detekt
+          else
+            echo "detekt task is not configured yet"
+          fi
+          if echo "$TASKS" | grep -q "ktlint"; then
+            gradle -p apps/android-tv ktlintCheck
+          else
+            echo "ktlint task is not configured yet"
+          fi
+      - name: Baseline profile check
+        run: |
+          TASKS="$(gradle -p apps/android-tv tasks --all)"
+          if echo "$TASKS" | grep -q "baseline"; then
+            gradle -p apps/android-tv :app:generateBaselineProfile
+          else
+            echo "baseline profile task is not configured yet"
+          fi

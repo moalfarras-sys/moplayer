@@ -1,0 +1,20 @@
+{
+  "name": "moplayer-monorepo",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "pnpm@9.15.1",
+  "scripts": {
+    "dev:web": "pnpm --filter admin-web dev",
+    "build:web": "pnpm --filter admin-web build",
+    "lint:web": "pnpm --filter admin-web lint",
+    "typecheck:web": "pnpm --filter admin-web typecheck",
+    "test:web": "pnpm --filter admin-web test",
+    "build:android": "gradle -p apps/android-tv :app:assembleDebug",
+    "test:android": "gradle -p apps/android-tv test",
+    "supabase:reset": "supabase db reset",
+    "supabase:functions": "supabase functions serve"
+  },
+  "dependencies": {
+    "pg": "^8.19.0"
+  }
+}

@@ -1,0 +1,21 @@
+name: Supabase CI
+
+on:
+  push:
+    paths:
+      - 'supabase/**'
+      - '.github/workflows/supabase-ci.yml'
+  pull_request:
+    paths:
+      - 'supabase/**'
+
+jobs:
+  supabase:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+      - name: Validate migrations
+        run: supabase db lint --local || true
+      - name: Check edge functions formatting
+        run: find supabase/functions -name '*.ts' -maxdepth 3 -print

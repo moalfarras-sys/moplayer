@@ -1,0 +1,40 @@
+# Monorepo for MoPlayer
+
+node_modules/
+.pnpm-store/
+.next/
+out/
+dist/
+coverage/
+
+# Android
+.gradle/
+**/build/
+local.properties
+*.keystore
+*.jks
+
+# Env/Secrets
+.env
+.env.*
+!.env.example
+*.secret
+apps/android-tv/secrets.properties
+apps/admin-web/.env.local
+
+# IDE
+.idea/
+.vscode/
+*.iml
+*.tsbuildinfo
+
+# Supabase
+.supabase/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+tools/
