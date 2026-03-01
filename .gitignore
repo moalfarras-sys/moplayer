@@ -30,6 +30,7 @@ apps/admin-web/.env.local
 
 # Supabase
 .supabase/
+supabase/.temp/
 
 # Logs
 npm-debug.log*
